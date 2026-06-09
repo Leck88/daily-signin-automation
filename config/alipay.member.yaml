@@ -1,0 +1,54 @@
+# 支付宝会员每日签到专用配置
+# 使用前提：
+# 1. 手机已安装并登录支付宝。
+# 2. 手机已开启 USB 调试，电脑能通过 adb devices 看到设备。
+# 3. 第一次运行建议使用 --dry-run，只识别按钮，不真实点击。
+
+# 多台手机同时连接时，在这里写 adb devices 输出的设备序列号。
+device:
+
+safety:
+  # 在内置高风险词基础上额外拦截。签到服务默认不应该点购买、支付、开通、授权类按钮。
+  extra_block_keywords:
+    - 付款
+    - 花呗
+    - 借呗
+    - 理财
+    - 保险
+    - 基金
+    - 开通
+
+tasks:
+  - name: 支付宝会员每日签到
+    app: com.eg.android.AlipayGphone
+    enabled: true
+    schedule: "08:30"
+    steps:
+      # 打开支付宝后，先进入“我的”。不同版本底部 Tab 文案一般比较稳定。
+      - action: click_text
+        text: 我的
+        timeout: 8
+        wait: 2
+
+      # 支付宝会员入口可能显示为“支付宝会员”或简称“会员”。
+      - action: click_text_any
+        texts: ["支付宝会员", "会员"]
+        timeout: 6
+        wait: 3
+
+      # 每日签到按钮在不同账号/版本里可能叫“签到”“领积分”“立即领取”等。
+      - action: click_text_contains_any
+        texts: ["签到", "领积分", "立即领取", "领取"]
+        timeout: 6
+        wait: 2
+
+      # 有些版本签到后会弹出二次领取或确认按钮，再尝试一次低风险领取文案。
+      - action: click_text_contains_any
+        texts: ["领取", "收下", "知道了", "完成"]
+        timeout: 3
+        wait: 1
+
+      # 保存结果截图，方便确认当天是否已签到。
+      - action: screenshot
+        name: alipay_member_done
+
