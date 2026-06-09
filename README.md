@@ -91,6 +91,26 @@ tasks:
         name: alipay_done
 ```
 
+## 具象示例：支付宝会员每日签到
+
+仓库内置了一个更具体的支付宝会员签到配置：
+
+```bash
+python -m signin_service.cli run --config config\alipay.member.yaml --dry-run
+python -m signin_service.cli run --config config\alipay.member.yaml --execute
+```
+
+它会按以下流程执行：
+
+1. 打开支付宝。
+2. 点击“我的”。
+3. 进入“支付宝会员/会员”。
+4. 查找“签到、领积分、立即领取、领取”等低风险按钮。
+5. 命中支付、下单、充值、授权、开通、借款等关键词时自动跳过。
+6. 保存结果截图到 `logs/screenshots`。
+
+如果你要适配其他 App，建议复制 `config/alipay.member.yaml`，只改包名、任务名和步骤文案。
+
 ## 安全策略
 
 默认危险关键词：
@@ -120,4 +140,3 @@ safety:
 - 默认增加风险关键词拦截。
 - 增加 dry-run、日志、截图、调度。
 - 更适合扩展到不同 App 的签到和奖励领取。
-
