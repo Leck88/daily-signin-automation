@@ -1,0 +1,99 @@
+# 淘宝淘金币每日签到/领金币专用配置
+# 使用前提：
+# 1. 手机已安装并登录淘宝。
+# 2. adb devices 能识别手机。
+# 3. 第一次运行务必先用 --dry-run，看日志确认会匹配哪些按钮。
+#
+# 说明：
+# 淘金币页面活动变化频繁，本配置只做低风险动作：
+# - 进入“我的淘宝/领淘金币/淘金币”
+# - 点击“签到、领取奖励、立即领取、点击得、领金币”等收益领取按钮
+# - 对“去完成、去逛逛、去浏览”等任务按钮保持谨慎，只执行少量浏览类动作
+# - 命中下单、购买、充值、支付、邀请、助力等关键词时自动跳过
+
+device:
+
+safety:
+  extra_block_keywords:
+    - 下单
+    - 购买
+    - 买
+    - 支付
+    - 充值
+    - 开通
+    - 授权
+    - 邀请
+    - 助力
+    - 拼团
+    - 砍价
+    - 花呗
+    - 省钱卡
+    - 88VIP
+
+tasks:
+  - name: 淘宝淘金币每日签到
+    app: com.taobao.taobao
+    enabled: true
+    schedule: "08:35"
+    steps:
+      # 进入淘宝后先尝试点击首页/底部的“我的淘宝”。
+      - action: click_text_any
+        texts: ["我的淘宝", "我的"]
+        timeout: 8
+        wait: 2
+
+      # 淘金币入口可能是 text，也可能是 description。两种都尝试。
+      - action: click_text_contains_any
+        texts: ["领淘金币", "淘金币", "金币"]
+        timeout: 5
+        wait: 3
+      - action: click_desc_contains_any
+        descs: ["领淘金币", "淘金币", "金币"]
+        timeout: 3
+        wait: 3
+
+      # 到达淘金币页后，优先领取可见奖励。
+      - action: click_text_contains_any
+        texts: ["签到", "立即领取", "领取奖励", "点击得", "领金币", "领取"]
+        timeout: 6
+        wait: 2
+
+      # 有些奖励按钮在 description 上。
+      - action: click_desc_contains_any
+        descs: ["签到", "立即领取", "领取奖励", "点击得", "领金币", "领取"]
+        timeout: 3
+        wait: 2
+
+      # 向下找更多可领取项。repeat 中每轮都先领，再滑动。
+      - action: repeat
+        times: 3
+        steps:
+          - action: click_text_contains_any
+            texts: ["立即领取", "领取奖励", "点击得", "领金币", "领取"]
+            timeout: 2
+            wait: 1
+          - action: click_desc_contains_any
+            descs: ["立即领取", "领取奖励", "点击得", "领金币", "领取"]
+            timeout: 2
+            wait: 1
+          - action: swipe
+            direction: up
+            scale: 0.45
+            wait: 1
+
+      # 保守执行少量浏览任务。危险词会被 safety 拦截。
+      - action: click_text_contains_any
+        texts: ["去逛逛", "去浏览", "逛一逛", "去看看"]
+        timeout: 3
+        wait: 12
+
+      # 浏览后返回淘金币页，再尝试领取一次奖励。
+      - action: back
+        wait: 2
+      - action: click_text_contains_any
+        texts: ["领取奖励", "立即领取", "领金币", "领取"]
+        timeout: 4
+        wait: 2
+
+      - action: screenshot
+        name: taobao_coin_done
