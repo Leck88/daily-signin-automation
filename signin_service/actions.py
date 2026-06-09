@@ -94,6 +94,24 @@ class ActionRunner:
         if clicked:
             time.sleep(wait)
 
+    def action_click_desc_any(self, task_name: str, descs: list[str], timeout: float = 3, wait: float = 1) -> None:
+        # 淘宝首页入口经常是 description 而不是 text，例如“领淘金币”。
+        for desc in descs:
+            selector = self.d(description=desc)
+            if self._click_selector(selector, desc, timeout=timeout):
+                time.sleep(wait)
+                return
+        self.logger.info("No candidate description matched: %s", descs)
+
+    def action_click_desc_contains_any(self, task_name: str, descs: list[str], timeout: float = 3, wait: float = 1) -> None:
+        # description 模糊匹配，适合“领淘金币，签到领红包”这类组合文案。
+        for desc in descs:
+            selector = self.d(descriptionContains=desc)
+            if self._click_selector(selector, desc, timeout=timeout):
+                time.sleep(wait)
+                return
+        self.logger.info("No candidate fuzzy description matched: %s", descs)
+
     def action_swipe(self, task_name: str, direction: str = "up", scale: float = 0.6, wait: float = 1) -> None:
         # direction 支持 uiautomator2 的方向值，常用 up/down/left/right。
         if self.dry_run:
@@ -101,6 +119,17 @@ class ActionRunner:
         else:
             self.d.swipe_ext(direction, scale=scale)
         time.sleep(wait)
+
+    def action_repeat(self, task_name: str, times: int, steps: list[dict[str, Any]]) -> None:
+        # 简单循环动作，适合淘金币页向下滑动后反复找“领取/去完成”按钮。
+        for index in range(times):
+            self.logger.info("Repeat %s/%s", index + 1, times)
+            for step in steps:
+                action = step.get("action")
+                if not action:
+                    raise ValueError("repeat step requires action")
+                params = {key: value for key, value in step.items() if key != "action"}
+                self.run_step(action, params, task_name)
 
     def action_back(self, task_name: str, wait: float = 1) -> None:
         if self.dry_run:
