@@ -111,6 +111,27 @@ python -m signin_service.cli run --config config\alipay.member.yaml --execute
 
 如果你要适配其他 App，建议复制 `config/alipay.member.yaml`，只改包名、任务名和步骤文案。
 
+## 具象示例：淘宝淘金币每日签到
+
+仓库也内置了淘金币配置：
+
+```bash
+python -m signin_service.cli run --config config\taobao.coin.yaml --dry-run
+python -m signin_service.cli run --config config\taobao.coin.yaml --execute
+```
+
+它会尝试：
+
+1. 打开淘宝。
+2. 进入“我的淘宝”。
+3. 查找“领淘金币 / 淘金币 / 金币”入口。
+4. 点击“签到、立即领取、领取奖励、点击得、领金币”等低风险按钮。
+5. 向下滑动查找更多领取项。
+6. 保守执行一次“去逛逛 / 去浏览 / 逛一逛 / 去看看”类任务。
+7. 返回后再尝试领取奖励并截图。
+
+淘金币页面变化比支付宝会员更频繁，建议先用 `--dry-run` 看日志。遇到页面改版时，优先改 `config/taobao.coin.yaml` 里的候选文案，而不是改代码。
+
 ## 安全策略
 
 默认危险关键词：
